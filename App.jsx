@@ -1,57 +1,73 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, TextInput, Button, Text, FlatList } from 'react-native';
+import { View, StyleSheet } from 'react-native';
+import * as Font from 'expo-font';
+import { AppLoading } from 'expo';
+
+import Header from './components/Header';
+import StartGameScreen from './screens/StartGameScreen';
+import GameScreen from './screens/GameScreen';
+import GameOverScreen from './screens/GameOverScreen';
+import OpenSans from './assets/fonts/OpenSans-Regular.ttf';
+import OpenSansBold from './assets/fonts/OpenSans-Bold.ttf';
 
 const styles = StyleSheet.create({
   screen: {
-    padding: 50,
-  },
-  inputContainer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  input: {
-    borderColor: 'black',
-    borderWidth: 1,
-    padding: 10,
-    width: '80%',
-  },
-  listItem: {
-    padding: 10,
-    backgroundColor: '#ccc',
-    borderColor: 'black',
-    borderWidth: 1,
-    marginVertical: 10,
-  },
+    flex: 1
+  }
 });
 
+const fetchFonts = () => {
+  return Font.loadAsync({
+    // eslint-disable-next-line global-require
+    'open-sans': OpenSans,
+    // eslint-disable-next-line global-require
+    'open-sans-bold': OpenSansBold
+  });
+};
+
 export default function App() {
-  const [enteredGoal, setEnteredGoal] = useState('');
-  const [courseGoals, setCourseGoals] = useState([]);
+  const [userNumber, setUserNumber] = useState();
+  const [guessRounds, setGuessRounds] = useState(0);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  if (!dataLoaded) {
+    return (
+      <AppLoading
+        startAsync={fetchFonts}
+        onFinish={() => setDataLoaded(true)}
+        onError={err => console.log(err)}
+      />
+    );
+  }
+
+  const startGameHandler = selectedNumber => {
+    setUserNumber(selectedNumber);
+    setGuessRounds(0);
+  };
+
+  const gameOverHandler = numberOfRounds => {
+    setGuessRounds(numberOfRounds);
+  };
+
+  const restartHandler = () => {
+    setUserNumber(null);
+    setGuessRounds(0);
+  };
+
+  let content = <StartGameScreen startGame={startGameHandler} />;
+
+  if (userNumber && guessRounds <= 0) {
+    content = <GameScreen onGameOver={gameOverHandler} userChoice={userNumber} />;
+  } else if (guessRounds > 0) {
+    content = (
+      <GameOverScreen userNumber={userNumber} rounds={guessRounds} onRestart={restartHandler} />
+    );
+  }
+
   return (
     <View style={styles.screen}>
-      <View style={styles.inputContainer}>
-        <TextInput
-          placeholder="Course Goal"
-          style={styles.input}
-          onChangeText={enteredText => setEnteredGoal(enteredText)}
-          value={enteredGoal}
-        />
-        <Button
-          title="Add"
-          onPress={() =>
-            setCourseGoals(currentGoals => [
-              ...currentGoals,
-              { id: Math.random().toString(), value: enteredGoal },
-            ])
-          }
-        />
-      </View>
-      <FlatList
-        data={courseGoals}
-        keyExtractor={item => item.id}
-        renderItem={itemData => (
-          <View style={styles.listItem}>
-            <Text>{itemData.item.value}</Text>
-          </View>
-        )}
-      />
+      <Header title="Guess a Number" />
+      {content}
     </View>
   );
 }
