@@ -1,16 +1,17 @@
-# React Native App
+# Guess the Number
 
 ## Description
 
+My first app created with React Native
 
-## Live view
+## Preview
 
+<img src="./Guess the number.png" width="700"/>
 
-## Requirements
 
 ## Install
 
-
-## Run Project
-
-
+```
+yarn install
+yar start
+````
